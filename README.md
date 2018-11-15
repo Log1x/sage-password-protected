@@ -20,88 +20,55 @@ composer require log1x/sage-password-protected
 
 ## Usage
 
-Out of the box, this package does absolutely nothing as all values are defaulted to false. To get started, begin passing your values through the provided filters. When passing the password, you must either pass it through `password_hash()` or if using ACF, use my [acf-encrypted-password](https://github.com/log1x/acf-encrypted-password) field.
+Out of the box, this package does absolutely nothing as all values are defaulted to false. To get started, begin passing your values in an array through the provided filter. When passing the password, you must either pass it through `password_hash()` or if using ACF, use my [acf-encrypted-password](https://github.com/log1x/acf-encrypted-password) field.
 
-Below are not only the provided filters, but a personal example of how I use them alongside ACF and [ACF Fluent](https://github.com/samrap/acf-fluent).
+### Configuration
 
-### Filters
+#### Defaults
+
+Below are the default / possible configuration values.
 
 ```php
 /**
- * Returns true if password protection is enabled.
- *
- * @return boolean
- */
-add_filter('password-protected/isActive', function () {
-    return Acf::option('password_protected')->get();
-});
-
-/**
- * Returns the password set for password protection.
- *
- * @return string
- */
-add_filter('password-protected/password', function () {
-    return Acf::option('password')->get();
-});
-
-/**
- * Returns true if feeds are allowed while password protection is enabled.
- *
- * @return boolean
- */
-add_filter('password-protected/allowFeeds', function () {
-    return Acf::option('password_show_feeds')->get();
-});
-
-/**
- * Returns true if admins are allowed to bypass authentication while password protection is enabled.
- *
- * @return boolean
- */
-add_filter('password-protected/allowAdmins', function () {
-    return Acf::option('password_allow_administrators')->get();
-});
-
-/**
- * Returns true if users are allowed to bypass authentication while password protection is enabled.
- *
- * @return boolean
- */
-add_filter('password-protected/allowUsers', function () {
-    return Acf::option('password_allow_users')->get();
-});
-
-/**
- * Returns true if specific IP Addresses are allowed to bypass authentication while password protection is enabled.
- *
- * @return boolean
- */
-add_filter('password-protected/allowIpAddresses', function () {
-    return Acf::option('password_allow_by_ip_address')->get();
-});
-
-/**
- * Returns the IP addresses allowed to bypass authentication while password protection is enabled.
- *
+ * Default configuration for Sage Password Protected
+ * 
  * @return array
  */
-add_filter('password-protected/allowedIpAddresses', function () {
-    return Acf::option('password_allowed_ip_addresses')->get();
+add_filter('password_protected', function () {
+    return [
+        'active'             => false,
+        'password'           => false,
+        'secret'             => $this->secret,
+        'allowFeeds'         => false,
+        'allowAdmins'        => false,
+        'allowUsers'         => false,
+        'allowIpAddresses'   => false,
+        'allowedIpAddresses' => [],
+        'title'              => $this->name()
+    ];
 });
 ```
 
-You can also filter the page title:
+#### Example
+
+Below is a personal example of how I handle the configuration alongside ACF and [ACF Fluent](https://github.com/samrap/acf-fluent).
 
 ```php
 /**
- * Returns the page title used for the password protection page.
- *
- * @param  string $name
- * @return string
+ * Configuration for Sage Password Protected.
+ * 
+ * @return array
  */
-add_filter('password-protected/title', function ($name) {
-    return $name . ' | Protected';
+add_filter('password_protected', function () {
+    return [
+        'active'             => Acf::option('password_protected')->get(),
+        'password'           => Acf::option('password')->get(),
+        'allowFeeds'         => Acf::option('password_show_feeds')->get(),
+        'allowAdmins'        => Acf::option('password_allow_administrators')->get(),
+        'allowUsers'         => Acf::option('password_allow_users')->get(),
+        'allowIpAddresses'   => Acf::option('password_allow_by_ip_address')->get(),
+        'allowedIpAddresses' => Acf::option('password_allowed_ip_addresses')->get(),
+    ];
 });
 ```
 

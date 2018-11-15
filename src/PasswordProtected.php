@@ -59,14 +59,19 @@ class PasswordProtected
         add_action('template_redirect', [$this, 'showLogin'], -1);
 
         /** Configuration */
-        $this->isActive = apply_filters('password-protected/isActive', false);
-        $this->password = apply_filters('password-protected/password', false);
-        $this->secret = apply_filters('password-protected/passwordSecret', $this->secret);
-        $this->allowFeeds = apply_filters('password-protected/allowFeeds', false);
-        $this->allowAdmins = apply_filters('password-protected/allowAdmins', false);
-        $this->allowUsers = apply_filters('password-protected/allowUsers', false);
-        $this->allowIpAddresses = apply_filters('password-protected/allowIpAddresses', false);
-        $this->allowedIpAddresses = apply_filters('password-protected/allowedIpAddresses', []);
+        $this->defaults = [
+            'active'             => false,
+            'password'           => false,
+            'secret'             => $this->secret,
+            'allowFeeds'         => false,
+            'allowAdmins'        => false,
+            'allowUsers'         => false,
+            'allowIpAddresses'   => false,
+            'allowedIpAddresses' => [],
+            'title'              => $this->name()
+        ];
+
+        $this->config = (object) wp_parse_args(apply_filters('password_protected', []), $this->defaults);
 
         /** Initialize WP_Error */
         $this->errors = new \WP_Error();
@@ -126,7 +131,7 @@ class PasswordProtected
      */
     public function isActive()
     {
-        if ($this->isActive) {
+        if ($this->config->active) {
             return is_robots() ? false : true;
         }
 
@@ -174,7 +179,7 @@ class PasswordProtected
      */
     protected function allowFeeds()
     {
-        if ($this->allowFeeds && is_feed()) {
+        if ($this->config->allowFeeds && is_feed()) {
             return true;
         }
 
@@ -189,7 +194,7 @@ class PasswordProtected
      */
     protected function allowAdmins()
     {
-        if (!is_admin() && $this->allowAdmins && current_user_can('manage_options')) {
+        if (!is_admin() && $this->config->allowAdmins && current_user_can('manage_options')) {
             return true;
         }
 
@@ -204,7 +209,7 @@ class PasswordProtected
      */
     protected function allowUsers()
     {
-        if (!is_admin() && $this->allowUsers && is_user_logged_in()) {
+        if (!is_admin() && $this->config->allowUsers && is_user_logged_in()) {
             return true;
         }
 
@@ -218,7 +223,7 @@ class PasswordProtected
      */
     protected function allowedIpAddress()
     {
-        if ($this->allowIpAddresses && $this->getAllowedIpAddresses()) {
+        if ($this->config->allowIpAddresses && is_array($this->getAllowedIpAddresses())) {
             if (in_array($_SERVER['REMOTE_ADDR'], $this->getAllowedIpAddresses())) {
                 return true;
             }
@@ -234,9 +239,11 @@ class PasswordProtected
      */
     protected function getAllowedIpAddresses()
     {
-        return collect($this->allowedIpAddresses)
+        return collect($this->config->allowedIpAddresses)
             ->map(function ($address) {
-                return $address['ip_address'] ?? $address;
+                return collect($address)
+                    ->filter()
+                    ->pop();
             })->filter()->toArray();
     }
 
@@ -261,7 +268,7 @@ class PasswordProtected
      */
     protected function getPassword()
     {
-        return $this->password;
+        return $this->config->password;
     }
 
     /**
@@ -346,7 +353,7 @@ class PasswordProtected
      */
     public function title()
     {
-        return apply_filters('password-protected/title', $this->name());
+        return $this->config->title;
     }
 
     /**
@@ -393,7 +400,7 @@ class PasswordProtected
             'agent'   => $this->browserAgent() ?? false
         ]), $this->cipher, $this->secret, false, $this->vector);
 
-        return setcookie($this->cookie, $cookie, $this->getCookieDuration(), '/', parse_url(get_home_url(), PHP_URL_HOST), is_ssl(), true);
+        return setcookie($this->cookie, $cookie, $this->getCookieDuration(), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
     }
 
     /**
@@ -403,7 +410,7 @@ class PasswordProtected
      */
     protected function unsetCookie()
     {
-        return setcookie($this->cookie, '', -1, '/', parse_url(get_home_url(), PHP_URL_HOST));
+        return setcookie($this->cookie, '', -1, COOKIEPATH, COOKIE_DOMAIN);
     }
 
     /**
@@ -431,7 +438,7 @@ class PasswordProtected
      */
     protected function parseCookie()
     {
-        if (!$cookie = openssl_decrypt($this->getCookie(), $this->cipher, $this->secret, false, $this->vector)) {
+        if (!$cookie = openssl_decrypt($this->getCookie(), $this->cipher, $this->config->secret, false, $this->vector)) {
             return false;
         }
 
