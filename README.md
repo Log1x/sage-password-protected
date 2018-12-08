@@ -1,5 +1,7 @@
 # Sage Password Protected
 
+[![Latest Stable Version](https://poser.pugx.org/log1x/sage-password-protected/v/stable)](https://packagist.org/packages/log1x/sage-password-protected) [![Total Downloads](https://poser.pugx.org/log1x/sage-password-protected/downloads)](https://packagist.org/packages/log1x/sage-password-protected)
+
 Sage Password Protected is a simple password protection package for use with [Sage 9](https://github.com/roots/sage) built for developers. No admin pages, no styles, no javascript, no bloat. Simply pass your own configuration to the provided filters and off you go. 
 
 Easily build your own field group for it within your theme options using ACF, or pass a filter so it is only enabled when `WP_ENV` does not equal `production`.
