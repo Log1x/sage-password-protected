@@ -48,7 +48,7 @@ class PasswordProtected
     public function __construct()
     {
         /** Return if Sage is not present. */
-        if (!function_exists('App\sage')) {
+        if (!function_exists('App\template') && !function_exists('Roots\view')) {
             return;
         }
 
@@ -89,9 +89,14 @@ class PasswordProtected
         }
 
         if (isset($_REQUEST['password_protected']) && $_REQUEST['password_protected'] == 'login') {
-            echo \App\template(__DIR__.'/views/password-protected.blade.php', [
-                'password' => $this
-            ]);
+
+            if (class_exists('Roots\Acorn\Application')) {
+                echo \Roots\view("password-protected", ['password' => $this])->render();
+            } else {
+                echo \App\template(__DIR__.'/views/password-protected.blade.php', [
+                    'password' => $this
+                ]);
+            }
 
             exit();
         }
